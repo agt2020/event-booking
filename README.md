@@ -3,7 +3,8 @@
 This is an Event booking project build with Go
 ### Prerequisites
 
-* Go 1.19
+* Go 1.21
+* Gin 1.10
 * PostgreSQL 17.2
 
 ## Installation

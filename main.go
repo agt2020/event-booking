@@ -1,6 +1,7 @@
 package main
 
 import (
+	"agt2020/event-booking/db"
 	"agt2020/event-booking/models"
 	"net/http"
 
@@ -8,8 +9,11 @@ import (
 )
 
 func main() {
+	db.Initdb()
+
 	server := gin.Default()
 	server.GET("/events", getEvents)
+	// server.GET("/dbtest", checkDbConnection)
 	server.POST("/events", createEvent)
 	server.Run(":8000")
 }
@@ -37,3 +41,19 @@ func createEvent(context *gin.Context) {
 		"event":   event,
 	})
 }
+
+// func checkDbConnection(context *gin.Context) {
+// 	db.Initdb()
+// 	rows, err := db.RunQuery("SELECT user_id,username,email FROM users")
+// 	if err != nil {
+// 		context.JSON(500, gin.H{
+// 			"connection status": "Failed to fetch",
+// 			"error":             err,
+// 		})
+// 	}
+// 	result := db.FetchRows(rows)
+// 	context.JSON(200, gin.H{
+// 		"data":  result,
+// 		"error": nil,
+// 	})
+// }

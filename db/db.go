@@ -2,13 +2,14 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-func Initdb() {
+func Initdb() *sql.DB {
 	connStr := "user=agt dbname=event-booking sslmode=disable"
 	DB, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -18,6 +19,7 @@ func Initdb() {
 	DB.SetMaxIdleConns(5)
 
 	createTables(DB)
+	return DB
 }
 
 func createTables(db *sql.DB) {
@@ -37,30 +39,14 @@ func createTables(db *sql.DB) {
 	}
 }
 
-// func RunQuery(sql string) (*sql.Rows, error) {
-// 	rows, err := DB.Query(sql)
-// 	if err != nil {
-// 		log.Fatalf("Failed to execute query: %v", err)
-// 	}
-// 	return rows, err
-// }
+func PrepareDB(db *sql.DB, query string) (*sql.Stmt, error) {
+	return db.Prepare(query)
+}
 
-// func FetchRows(rows *sql.Rows) []any {
-// 	result := []any{}
-// 	for rows.Next() {
-// 		var user_id int
-// 		var username, email string
-
-// 		// Scan the columns into variables
-// 		err := rows.Scan(&user_id, &username, &email)
-// 		if err != nil {
-// 			log.Fatalf("Failed to scan row: %v", err)
-// 		}
-// 		row := make(map[string]any, 3)
-// 		row["id"] = user_id
-// 		row["username"] = username
-// 		row["email"] = email
-// 		result = append(result, row)
-// 	}
-// 	return result
-// }
+func RunQuery(db *sql.DB, sql string) (*sql.Rows, error) {
+	rows, err := db.Query(sql)
+	if err != nil {
+		return rows, fmt.Errorf("failed to execute query: %w", err)
+	}
+	return rows, nil
+}

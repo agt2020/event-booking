@@ -2,6 +2,7 @@ package models
 
 import (
 	"agt2020/event-booking/db"
+	"agt2020/event-booking/utils"
 )
 
 type User struct {
@@ -10,7 +11,7 @@ type User struct {
 	Password string `binding:"required"`
 }
 
-func (u *User) SaveUser() (int64, error) {
+func (u User) SaveUser() (int64, error) {
 	query := `
 	INSERT INTO public.users (email, password)
 	VALUES ($1, $2) RETURNING id
@@ -23,7 +24,12 @@ func (u *User) SaveUser() (int64, error) {
 	defer stmt.Close()
 
 	var userID int64
-	err = stmt.QueryRow(&u.Email, &u.Password).Scan(&userID)
+	hashedPassword, err := utils.HashPassword(u.Password)
+	if err != nil {
+		return 0, err
+	}
+
+	err = stmt.QueryRow(u.Email, hashedPassword).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}

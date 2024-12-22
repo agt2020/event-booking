@@ -38,14 +38,56 @@ func (e Event) Save() (int64, error) {
 	return lastID, nil
 }
 
-func GetAllEvents() ([]Event, error) {
+func (e Event) Update() (int, error) {
+	query := `
+	UPDATE public.events SET name=$1, description=$2, location=$3, dateTime=$4, user_id=$5
+	WHERE id=$6 RETURNING id
+	`
+	DB := db.Initdb()
+	stmt, err := db.PrepareDB(DB, query)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	var lastID int
+	err = stmt.QueryRow(e.Name, e.Description, e.Location, e.DateTime, e.UserID, e.ID).Scan(&lastID)
+	if err != nil || lastID == 0 {
+		return 0, fmt.Errorf("failed to update event: %w", err)
+	}
+
+	return lastID, nil
+}
+
+func DeleteEvent(id string) error {
+	query := "DELETE FROM public.events WHERE id=$1"
+	DB := db.Initdb()
+	stmt, err := db.PrepareDB(DB, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+	isDeleted, err := result.RowsAffected()
+	if isDeleted == 1 {
+		return nil
+	} else {
+		return err
+	}
+}
+
+func GetAllEvents() (*[]Event, error) {
 	events = []Event{}
 
 	query := "SELECT * FROM public.events"
 	DB := db.Initdb()
 	rows, err := db.RunQuery(DB, query)
 	if err != nil {
-		return events, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -53,31 +95,44 @@ func GetAllEvents() ([]Event, error) {
 		var e Event
 
 		// Scan the columns into variables
-		err := rows.Scan(&e.ID, &e.Name, &e.Description, &e.Location, &e.DateTime, &e.UserID)
+		err := rows.Scan(
+			&e.ID,
+			&e.Name,
+			&e.Description,
+			&e.Location,
+			&e.DateTime,
+			&e.UserID,
+		)
 		if err != nil {
-			log.Fatalf("Failed to scan row: %v", err)
+			log.Printf("Failed to scan row: %v", err)
 		}
 
 		events = append(events, e)
 	}
-	return events, err
+	return &events, err
 }
 
-func GetEvent(id string) (Event, error) {
-	var event Event
+func GetEvent(id string) (*Event, error) {
 	query := "SELECT * FROM public.events WHERE id=$1"
 	DB := db.Initdb()
 	stmt, err := db.PrepareDB(DB, query)
 	if err != nil {
-		return event, err
+		return nil, err
 	}
 	defer stmt.Close()
-
-	result, err := stmt.Exec(id)
+	// Scan event
+	var e Event
+	err = stmt.QueryRow(id).Scan(
+		&e.ID,
+		&e.Name,
+		&e.Description,
+		&e.Location,
+		&e.DateTime,
+		&e.UserID,
+	)
 
 	if err != nil {
-		return event, err
+		return nil, err
 	}
-	log.Fatal(result)
-	return event, nil
+	return &e, nil
 }

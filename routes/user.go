@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func createUser(context *gin.Context) {
+func signup(context *gin.Context) {
 	var user models.User
 	err := context.ShouldBindJSON(&user)
 
@@ -25,4 +25,22 @@ func createUser(context *gin.Context) {
 		"id":     id,
 		"result": "User successfuly created !",
 	})
+}
+
+func login(context *gin.Context) {
+	var user models.User
+	err := context.ShouldBindJSON(&user)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// Login
+	err = user.Auth()
+
+	if err == nil {
+		context.JSON(http.StatusOK, nil)
+	} else {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	}
 }

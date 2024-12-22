@@ -9,9 +9,14 @@ import (
 
 func main() {
 	server := gin.Default()
+	// GET list of events
 	server.GET("/events", getEvents)
-	server.GET("/event/id=?", getEvent)
+	// Get Single event by ID
+	server.GET("/event?", getEvent)
+	// Create Event
 	server.POST("/events", createEvent)
+
+	// Serving a server
 	server.Run(":8000")
 }
 
@@ -19,16 +24,22 @@ func getEvents(context *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
 		context.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
 	}
 	context.JSON(http.StatusOK, events)
 }
 
 func getEvent(context *gin.Context) {
 	id := context.Query("id")
+	if id == "" {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Event ID could not empty"})
+		return
+	}
+	// Get single event by ID from DB
 	event, err := models.GetEvent(id)
-
 	if err != nil {
 		context.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
 	}
 	context.JSON(http.StatusOK, event)
 }

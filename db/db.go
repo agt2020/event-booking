@@ -10,7 +10,7 @@ import (
 var DB *sql.DB
 
 func Initdb() *sql.DB {
-	connStr := "user=agt dbname=event-booking sslmode=disable"
+	connStr := "user=postgres password=postgres dbname=event-booking sslmode=disable"
 	DB, err := sql.Open("postgres", connStr)
 	if err != nil {
 		panic("Failed to connect to the database")

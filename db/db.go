@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
@@ -23,6 +24,17 @@ func Initdb() *sql.DB {
 }
 
 func createTables(db *sql.DB) {
+	createUsersTable := `
+	CREATE TABLE IF NOT EXISTS public.users(
+		id SERIAL NOT NULL PRIMARY KEY,
+		email TEXT NOT NULL UNIQUE,
+		password TEXT NOT NULL	
+	)`
+	_, err := db.Exec(createUsersTable)
+	if err != nil {
+		log.Printf("Could not create users table ! -> %v", err.Error())
+	}
+
 	createEventTable := `
 	CREATE TABLE IF NOT EXISTS public.events(
 		id SERIAL NOT NULL PRIMARY KEY,
@@ -30,12 +42,13 @@ func createTables(db *sql.DB) {
 		description TEXT NOT NULL,
 		location VARCHAR(255) NOT NULL,
 		dateTime TIMESTAMP NOT NULL,
-		user_id INT
+		user_id INT,
+		CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id)
 	)
 	`
-	_, err := db.Exec(createEventTable)
+	_, err = db.Exec(createEventTable)
 	if err != nil {
-		panic("Could not create events !")
+		log.Printf("Could not create events table ! -> %v", err.Error())
 	}
 }
 

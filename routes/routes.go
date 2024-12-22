@@ -3,6 +3,9 @@ package routes
 import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(server *gin.Engine) {
+	// USERS
+	server.POST("/user/signup", createUser)
+	// EVENTS
 	// Get list of events
 	server.GET("/events", getEvents)
 	// Get Single event by ID
